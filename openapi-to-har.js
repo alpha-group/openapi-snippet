@@ -379,12 +379,30 @@ const getPayloads = function (openApi, path, method) {
           if (sample === undefined) return null;
 
           const params = [];
-          Object.keys(sample).map((key) =>
-            params.push({
-              name: encodeURIComponent(key).replace(/\%20/g, '+'),
-              value: encodeURIComponent(sample[key]).replace(/\%20/g, '+'),
-            })
-          );
+          // console.log(sample);
+          Object.keys(sample).map((key) => {
+            // console.log(typeof(sample[key]));
+            if (Array.isArray(sample[key])) {
+              sample[key].forEach((entry) => {
+                params.push({
+                  name: `${key}[]`,
+                  value: entry,
+                });
+              });
+            } else if (Object.prototype.toString.call(sample[key]) === '[object Object]') {
+              Object.keys(sample[key]).map((k) => {
+                params.push({
+                  name: key + '[' + k + ']',
+                  value: sample[key][k],
+                });
+              });
+            } else {
+              params.push({
+                name: key,
+                value: sample[key],
+              });
+            }
+          });
 
           payloads.push({
             mimeType: 'application/x-www-form-urlencoded',
